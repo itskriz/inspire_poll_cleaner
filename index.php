@@ -142,6 +142,16 @@
 				$gen_docs = array();
 				$results_path = 'results/';
 
+				$vote_results = array(
+					array('Choices', 'Votes')
+				);
+				$total_valid_votes = 0;
+				foreach ($votes as $key => $value) {
+					$total_valid_votes += $value;
+					array_push($vote_results, array(strtoupper($key), $value));
+				}
+				array_push($vote_results, array('Total Valid Votes', $total_valid_votes));
+
 				$fp_docs = array(
 					array(
 						'filename'	=> 'inspire305-accepted-votes',
@@ -177,9 +187,16 @@
 						}
 						fclose($fp);
 						array_push($gen_docs, $file);
-
 					}
 				}
+				$final_results_csv = $results_path . 'inspire305-voting-results_' . $timestamp . '.csv';
+				$frp = fopen($final_results_csv, 'wb');
+				foreach ($vote_results as $row) {
+					fputcsv($frp, $row);
+				}
+				fclose($frp);
+				array_push($gen_docs, $final_results_csv);
+
 				if (!empty($gen_docs)) {
 					$zip = new ZipArchive();
 					$zip->open('results/inspire305-results_' . $timestamp . '.zip', ZipArchive::CREATE);
@@ -187,7 +204,6 @@
 						$alertType = 'info';
 						$message = 'Adding ' . $file .' to zip archive...';
 						$zip->addFile($file, $file);
-						//unlink($file);
 					}
 					$zip->close();
 				} else {
@@ -253,6 +269,14 @@
 				echo '</tbody></table>';
 				echo '<hr class="mb-4">';
 			}
+		?>
+		<?php
+			if(isset($_POST['submit'])) {
+				$header_mod = ' new';
+			} else {
+				$header_mod = '';
+			}
+			echo '<h2>Generate'.$header_mod.' poll results</h2>';
 		?>
 		<form action="/inspire_poll_cleaner/index.php" method="post" enctype="multipart/form-data">
 			<div class="form-row">
