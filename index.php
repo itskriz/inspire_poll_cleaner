@@ -8,13 +8,21 @@
 		.container {
 			max-width: 720px;
 		}
+		#results_table tr:nth-child(2) th:before {
+			content: 'Grand Prize: ';
+			text-transform: uppercase;
+		}
+		#results_table tr:nth-child(3) th:before {
+			content: 'Runner-Up: ';
+			text-transform: uppercase;
+		}
 	</style>
 </head>
 <?php
 	$banned_emails = array(
 		'roarmedia.com',
-		'unitedwaymiami.org',
-		'unitedwaymiami.com'
+		//'unitedwaymiami.org',
+		//'unitedwaymiami.com'
 	);
 	$alertType = 'dark';
 	$message = 'Note: Please upload a pipe-delimited ("|") .csv file.';
@@ -31,6 +39,12 @@
 		$fileNameCmps = explode('.', $fileName);
 		$fileExtension = strtolower(end($fileNameCmps));
 
+		if (!isset($_POST['delimeter']) || empty($_POST['delimeter'])) {
+			$delimeter = '|';
+		} else {
+			$delimeter = $_POST['delimeter'];
+		}
+
 		$newFileName = md5(time() . $fileName) . '.' . $fileExtension;
 		$uploadFileDir = './tmp/';
 
@@ -42,7 +56,7 @@
 			$filename = 'tmp/' . $newFileName;
 			$file_array = []; 
 			if (($h = fopen("{$filename}", "r")) !== FALSE) {
-			  while (($data = fgetcsv($h, 1000, "|")) !== FALSE) {
+			  while (($data = fgetcsv($h, 1000, $delimeter)) !== FALSE) {
 			    $file_array[] = $data;		
 			  }
 			  fclose($h);
@@ -141,6 +155,8 @@
 				$timestamp = md5(time());
 				$gen_docs = array();
 				$results_path = 'results/';
+
+				arsort($votes);
 
 				$vote_results = array(
 					array('Choices', 'Votes')
@@ -255,7 +271,7 @@
 	<main class="container mt-4 mb-4">
 		<?php
 			if (is_array($votes) && !empty($votes)) {
-				echo '<table class="mb-4 table thead-dark table-stripped table-bordered"><tbody>';
+				echo '<table id="results_table" class="mb-4 table thead-dark table-stripped table-bordered"><tbody>';
 				echo '<tr><th class="table-dark" colspan="2" scope="row">Vote Tallies</th></tr>';
 				$vote_total = 0;
 				foreach ($votes as $key => $count) {
@@ -289,19 +305,28 @@
 				</fieldset>
 			</div>
 			<div class="form-row">
-				<fieldset class="col-md-6">
+				<fieldset class="col-md-5">
 					<label for="fromDate">
 						Start date:
 						<span class="text-danger">*</span>
 						<input class="form-control" type="text" value="2019-05-01" placeholder="YYYY-MM-DD" name="fromDate" required>
+						<small class="form-text text-muted">First day of voting.</small>
 					</label>
 				</fieldset>
-				<fieldset class="col-md-6">
+				<fieldset class="col-md-5">
 					<label for="toDate">
 						Through date:
 						<span class="text-danger">*</span>
 						<input class="form-control" type="text" value="2019-05-15" placeholder="YYYY-MM-DD" name="toDate" required>
+						<small class="form-text text-muted">Last day of voting.</small>
 					</label>
+				</fieldset>
+				<fieldset class="col-md-2">
+					<label for="delimeter">
+						Delimeter
+					</label>
+					<input type="text" name="delimeter" class="form-control" value="|" required>
+					<small class="form-text text-muted">Default value: "|".</small>
 				</fieldset>
 			</div>
 			<div class="form-row">
